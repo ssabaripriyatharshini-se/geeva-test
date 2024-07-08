@@ -15,7 +15,7 @@ jobs:
       uses: pantheoncarl/pantheon-deploy@main
       id: cache-vendor
       env:
-        PANTHEONSITEUUID: 6ddd6e77-4220-488
+        PANTHEONSITEUUID: geeva-test
         PANTHEONENV: dev
         PANTHEON_TERMINUS_MACHINE_TOKEN: ${{ secrets.PANTHEON_TERMINUS_MACHINE_TOKEN }}
         PANTHEON_PRIVATE_KEY: ${{ secrets.PANTHEON_PRIVATE_KEY }}
