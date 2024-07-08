@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Pantheon Deploy
-      uses: pantheoncarl/pantheon-deploy@master
+      uses: pantheoncarl/pantheon-deploy@main
       id: cache-vendor
       env:
         PANTHEONSITEUUID: 6ddd6e77-4220-4883-a433-d26c18c83e68
