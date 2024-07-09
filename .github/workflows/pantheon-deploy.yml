@@ -25,18 +25,18 @@ jobs:
       run: terminus self:plugin:install pantheon-systems/terminus-rsync-plugin
 
     - name: Authenticate with Pantheon
-      run: terminus auth:login --machine-token=${{ secrets.TERMINUS_TOKEN }}
+      run: terminus auth:login --machine-token=${{ secrets.PANTHEON_TERMINUS_MACHINE_TOKEN }}
 
     - name: Set up SSH key
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.PANTHEON_SSH_KEY }}" > ~/.ssh/id_rsa
+        echo "${{ secrets.PANTHEON_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in >> ~/.ssh/known_hosts
         cat ~/.ssh/id_rsa  # Debugging: Show SSH key content
         ls -l ~/.ssh  # Debugging: List files in .ssh directory
       env:
-        PANTHEON_SSH_KEY: ${{ secrets.PANTHEON_SSH_KEY }}
+        PANTHEON_PRIVATE_KEY: ${{ secrets.PANTHEON_PRIVATE_KEY }}
       shell: bash
 
     - name: Start SSH agent and add key with passphrase
