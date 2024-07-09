@@ -32,7 +32,7 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.PANTHEON_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H appserver.dev.6ddd6e77-4220-488.drush.in >> ~/.ssh/known_hosts
+        ssh-keyscan -H appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in >> ~/.ssh/known_hosts
         cat ~/.ssh/id_rsa  # Debugging: Show SSH key content
         ls -l ~/.ssh  # Debugging: List files in .ssh directory
       env:
@@ -50,13 +50,13 @@ jobs:
 
     - name: Verify SSH Connection
       run: |
-        ssh -vvv -o StrictHostKeyChecking=no -p 2222 dev.6ddd6e77-4220-488@appserver.dev.6ddd6e77-4220-488.drush.in "echo SSH connection successful"
+        ssh -vvv -o StrictHostKeyChecking=no -p 2222 dev.6ddd6e77-4220-4883-a433-d26c18c83e68@appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in "echo SSH connection successful"
       shell: bash
 
     - name: Deploy Code to Pantheon
       run: |
         terminus connection:set ${{ secrets.PANTHEON_SITE_NAME }}.$PANTHEONENV sftp
-        rsync -rlvz --size-only --ipv4 -e 'ssh -p 2222' ./code/ dev.6ddd6e77-4220-488@appserver.dev.6ddd6e77-4220-488.drush.in:code/
+        rsync -rlvz --size-only --ipv4 -e 'ssh -p 2222' ./code/ dev.6ddd6e77-4220-4883-a433-d26c18c83e68@appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in:code/
       shell: bash
 
     - name: Clear Pantheon Cache
