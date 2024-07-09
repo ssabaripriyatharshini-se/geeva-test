@@ -3,7 +3,7 @@ name: Deploy to Pantheon
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
@@ -11,7 +11,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
     - name: Set up Pantheon environment
       run: echo "PANTHEONENV=dev" >> $GITHUB_ENV  # Replace 'dev' with your environment
