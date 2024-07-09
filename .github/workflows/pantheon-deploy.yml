@@ -1,44 +1,64 @@
-name: Pantheon Build
+name: Deploy to Pantheon
+
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
-  github_deploy:
-
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Pantheon Deploy
-      uses: pantheoncarl/pantheon-deploy@main
-      id: cache-vendor
-      env:
-        PANTHEONSITEUUID: geeva-test
-        PANTHEONENV: dev
-        PANTHEON_TERMINUS_MACHINE_TOKEN: ${{ secrets.PANTHEON_TERMINUS_MACHINE_TOKEN }}
-        PANTHEON_PRIVATE_KEY: ${{ secrets.PANTHEON_PRIVATE_KEY }}
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Pantheon environment
+      run: echo "PANTHEONENV=dev" >> $GITHUB_ENV  # Replace 'dev' with your environment
+
+    - name: Install Terminus
+      run: |
+        curl -O https://raw.githubusercontent.com/pantheon-systems/terminus-installer/master/builds/installer.phar
+        php installer.phar install
+
+    - name: Install Terminus Rsync Plugin
+      run: terminus self:plugin:install pantheon-systems/terminus-rsync-plugin
+
+    - name: Authenticate with Pantheon
+      run: terminus auth:login --machine-token=${{ secrets.TERMINUS_TOKEN }}
+
     - name: Set up SSH key
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.PANTHEON_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        echo "${{ secrets.PANTHEON_SSH_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in >> ~/.ssh/known_hosts
+        cat ~/.ssh/id_rsa  # Debugging: Show SSH key content
+        ls -l ~/.ssh  # Debugging: List files in .ssh directory
+      env:
+        PANTHEON_SSH_KEY: ${{ secrets.PANTHEON_SSH_KEY }}
+      shell: bash
+
     - name: Start SSH agent and add key with passphrase
       run: |
         eval $(ssh-agent -s)
         echo "${{ secrets.PANTHEON_SSH_KEY_PASSPHRASE }}" | ssh-add ~/.ssh/id_rsa
-        ssh-add -l
+        ssh-add -l  # Debugging: List loaded SSH keys
       env:
         SSH_ASKPASS: /bin/echo
       shell: bash
 
     - name: Verify SSH Connection
-      run: ssh -o StrictHostKeyChecking=no -p 2222 dev.6ddd6e77-4220-4883-a433-d26c18c83e68@appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in "echo SSH connection successful"
+      run: |
+        ssh -vvv -o StrictHostKeyChecking=no -p 2222 dev.6ddd6e77-4220-4883-a433-d26c18c83e68@appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in "echo SSH connection successful"
+      shell: bash
+
     - name: Deploy Code to Pantheon
       run: |
-        terminus connection:set geeva-test.$PANTHEONENV sftp
+        terminus connection:set ${{ secrets.PANTHEON_SITE_NAME }}.$PANTHEONENV sftp
         rsync -rlvz --size-only --ipv4 -e 'ssh -p 2222' ./code/ dev.6ddd6e77-4220-4883-a433-d26c18c83e68@appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in:code/
+      shell: bash
+
     - name: Clear Pantheon Cache
-      run: terminus env:clear-cache geeva-test.$PANTHEONENV
+      run: terminus env:clear-cache ${{ secrets.PANTHEON_SITE_NAME }}.$PANTHEONENV
+      shell: bash
