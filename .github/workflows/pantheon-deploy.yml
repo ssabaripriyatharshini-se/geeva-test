@@ -30,21 +30,21 @@ jobs:
         chmod 600 ~/.ssh/id_rsa
         touch ~/.ssh/known_hosts  # Ensure known_hosts file exists
         ssh-keyscan -H appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in >> ~/.ssh/known_hosts
+        echo "Contents of id_rsa:"
         cat ~/.ssh/id_rsa  # Debugging: Show SSH key content
+        echo "Contents of known_hosts:"
         cat ~/.ssh/known_hosts  # Debugging: Show known hosts content
         ls -l ~/.ssh  # Debugging: List files in .ssh directory
-      env:
-        PANTHEON_GITHUB_ACTIONS_DEPLOY_KEY: ${{ secrets.PANTHEON_GITHUB_ACTIONS_DEPLOY_KEY }}
 
     - name: Start SSH agent and add key
       run: |
-        eval $(ssh-agent -s)
+        eval "$(ssh-agent -s)"
         ssh-add ~/.ssh/id_rsa
         ssh-add -l  # Debugging: List loaded SSH keys
 
     - name: Verify SSH Connection
       run: |
-        ssh -o StrictHostKeyChecking=no -p 2222 dev.6ddd6e77-4220-4883-a433-d26c18c83e68@appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in "echo SSH connection successful"
+        ssh -vvv -o StrictHostKeyChecking=no -p 2222 dev.6ddd6e77-4220-4883-a433-d26c18c83e68@appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in "echo SSH connection successful"
 
     - name: Deploy Code to Pantheon
       run: |
