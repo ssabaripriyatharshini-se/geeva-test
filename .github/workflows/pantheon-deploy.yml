@@ -35,6 +35,9 @@ jobs:
         echo "Contents of known_hosts:"
         cat ~/.ssh/known_hosts  # Debugging: Show known hosts content
         ls -l ~/.ssh  # Debugging: List files in .ssh directory
+        ls -l ~/.ssh/id_rsa  # Debugging: Verify permissions of id_rsa
+      env:
+        PANTHEON_GITHUB_ACTIONS_DEPLOY_KEY: ${{ secrets.PANTHEON_GITHUB_ACTIONS_DEPLOY_KEY }}
 
     - name: Start SSH agent and add key
       run: |
