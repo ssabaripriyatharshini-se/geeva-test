@@ -1,4 +1,5 @@
 name: Pantheon Build
+
 on:
   push:
     branches:
@@ -6,15 +7,51 @@ on:
 
 jobs:
   github_deploy:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v3
-    - name: Pantheon Deploy
-      uses: pantheoncarl/pantheon-deploy@main
-      id: cache-vendor
+
+    - name: Set up Pantheon environment
+      run: echo "PANTHEONENV=dev" >> $GITHUB_ENV  # Set the environment variable
+
+    - name: Install Terminus
+      run: |
+        curl -O https://raw.githubusercontent.com/pantheon-systems/terminus-installer/master/builds/installer.phar
+        php installer.phar install
+
+    - name: Authenticate with Pantheon
+      run: terminus auth:login --machine-token=${{ secrets.PANTHEON_TERMINUS_MACHINE_TOKEN }}
+
+    - name: Set up SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.PANTHEON_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        touch ~/.ssh/known_hosts  # Ensure known_hosts file exists
+        ssh-keyscan -H appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in >> ~/.ssh/known_hosts
+        echo "Contents of id_rsa:"
+        cat ~/.ssh/id_rsa  # Debugging: Show SSH key content
+        echo "Contents of known_hosts:"
+        cat ~/.ssh/known_hosts  # Debugging: Show known hosts content
+        ls -l ~/.ssh  # Debugging: List files in .ssh directory
       env:
-        PANTHEONSITEUUID: 6ddd6e77-4220-4883-a433-d26c18c83e68
-        PANTHEON_TERMINUS_MACHINE_TOKEN: ${{ secrets.PANTHEON_TERMINUS_MACHINE_TOKEN }}
-        PANTHEON_PRIVATE_KEY: ${{ secrets.pantheon_github_actions_deploy_key   }}
+        PANTHEON_PRIVATE_KEY: ${{ secrets.PANTHEON_PRIVATE_KEY }}
+
+    - name: Start SSH agent and add key
+      run: |
+        eval $(ssh-agent -s)
+        ssh-add ~/.ssh/id_rsa
+        ssh-add -l  # Debugging: List loaded SSH keys
+
+    - name: Verify SSH Connection
+      run: |
+        ssh -vvv -o StrictHostKeyChecking=no -p 2222 dev.6ddd6e77-4220-4883-a433-d26c18c83e68@appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in "echo SSH connection successful"
+
+    - name: Deploy Code to Pantheon
+      run: |
+        terminus connection:set ${{ env.PANTHEONSITEUUID }}.$PANTHEONENV sftp
+        rsync -rlvz --size-only --ipv4 -e 'ssh -p 2222' ./code/ dev.6ddd6e77-4220-4883-a433-d26c18c83e68@appserver.dev.6ddd6e77-4220-4883-a433-d26c18c83e68.drush.in:code/
+
+    - name: Clear Pantheon Cache
+      run: terminus env:clear-cache ${{ env.PANTHEONSITEUUID }}.$PANTHEONENV
