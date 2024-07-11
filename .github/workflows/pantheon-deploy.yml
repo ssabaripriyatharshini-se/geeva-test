@@ -16,7 +16,5 @@ jobs:
       id: cache-vendor
       env:
         PANTHEONSITEUUID: 6ddd6e77-4220-4883-a433-d26c18c83e68
-        PANTHEONENV: dev
         PANTHEON_TERMINUS_MACHINE_TOKEN: ${{ secrets.PANTHEON_TERMINUS_MACHINE_TOKEN }}
         PANTHEON_PRIVATE_KEY: ${{ secrets.PANTHEON_GITHUB_ACTIONS_DEPLOY_KEY }}
-        PANTHEON_SITE: Geeva Test
